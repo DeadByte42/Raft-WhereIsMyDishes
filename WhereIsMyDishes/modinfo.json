@@ -1,0 +1,76 @@
+{
+  "name": "WhereIsMyDishes",
+  "author": "DeadByte42",
+  "description": "Get back your used dishes!",
+  "version": "1.0",
+  "license": "GNU AGPLv3",
+  "icon": "icon.png",
+  "banner": "banner.png",
+  "gameVersion": "1.0.0",
+  "requiredByAllPlayers": false,
+  "updateUrl": "https://www.raftmodding.com/api/v1/mods/YOUR-MOD-SLUG-HERE/version.txt",
+  "isModPermanent": false,
+  "excludedFiles": [],
+  "modSettings": [
+    {
+      "name": "Available only in the world",
+      "type": "text",
+      "access": "menu"
+    },
+    {
+      "name": "Reset config",
+      "type": "button",
+      "access": "world"
+    },
+    {
+      "name": "",
+      "type": "text",
+      "access": "world"
+    },
+    {
+      "name": "Probabilities (%):",
+      "type": "text",
+      "access": "world"
+    },
+    {
+      "name": "Claybowl",
+      "type": "input",
+      "default": "60",
+      "access": "world"
+    },
+    {
+      "name": "Milk Bucket",
+      "type": "input",
+      "default": "80",
+      "access": "world"
+    },
+    {
+      "name": "Honey Jar",
+      "type": "input",
+      "default": "90",
+      "access": "world"
+    },
+    {
+      "name": "Drinking Glass",
+      "type": "input",
+      "default": "90",
+      "access": "world"
+    },
+    {
+      "name": "",
+      "type": "text",
+      "access": "world"
+    },
+    {
+      "name": "Alternative recipes:",
+      "type": "text",
+      "access": "world"
+    },
+    {
+      "name": "Alternative Honey Jar",
+      "type": "checkbox",
+      "default": true,
+      "access": "world"
+    }
+  ]
+}
