@@ -1,10 +1,12 @@
 ﻿using HarmonyLib;
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 public class WhereIsMyDishes : Mod
 {
@@ -13,7 +15,7 @@ public class WhereIsMyDishes : Mod
     private string harmonyID= "db42.wimd";
     private static string configPath;
     private static JSONObject configData;
-    private static string logName = "<color=#204080>[DB42.WhereIsMyDishes]</color>  ";
+    private static string logName = "[<color=#4060e0>DB42.WhereIsMyDishes</color>]  ";
     private static System.Random rand=new System.Random();
 
 
@@ -21,33 +23,22 @@ public class WhereIsMyDishes : Mod
     {
         harmony = new Harmony(harmonyID);
         harmony.PatchAll(Assembly.GetExecutingAssembly());
-        if (RAPI.IsCurrentSceneGame()) Enable();
+        ComponentManager<WhereIsMyDishes>.Value = this;
+        configPath = Path.Combine(SaveAndLoad.WorldPath, "WIMD.json");
+        configLoad();
+        PatchRecipes(AltJar);
         Info("Loaded!");
     }
 
     public void OnModUnload()
     {
         harmony.UnpatchAll(harmonyID);
-        Disable();
+        configPath = "";
+        configData.Clear();
     }
-
-    public override void WorldEvent_WorldLoaded() => Enable();
-
-    public override void WorldEvent_WorldUnloaded() => Disable();
 
 
     #region Features
-    private void Enable()
-    {
-        configPath = Path.Combine(SaveAndLoad.WorldPath,SaveAndLoad.CurrentGameFileName, "WIMD.json");
-        configData = configLoad();
-        PatchRecipes(AltJar);
-    }
-    private void Disable()
-    {
-        configPath = null;
-        configData = null;
-    }
 
     public static bool RandomCheck(float prob) {
         return  rand.NextDouble()*100<prob;
@@ -60,7 +51,7 @@ public class WhereIsMyDishes : Mod
             jar.settings_recipe.NewCost = new CostMultiple[]
             {
             new CostMultiple(new Item_Base[] {ItemManager.GetItemByName("HoneyComb")}, 6),
-            new CostMultiple(new Item_Base[] {ItemManager.GetItemByName("DrinkingGlass")}, 1)
+            new CostMultiple(new Item_Base[] {ItemManager.GetItemByName("DrinkingGlass")}, 2)
             };
         else
             jar.settings_recipe.NewCost = new CostMultiple[]
@@ -72,6 +63,33 @@ public class WhereIsMyDishes : Mod
 
     private static void Info(object message) {
         Debug.Log(logName + message.ToString());
+    }
+
+    public void Consume(string item)
+    {
+        if ((item.StartsWith("Claybowl") || item.StartsWith("ClayPlate"))
+                   && WhereIsMyDishes.RandomCheck(WhereIsMyDishes.Claybowl))
+        {
+            Debug.Log(true);
+            RAPI.GetLocalPlayer().Inventory.AddItem("Claybowl_Empty", 1);
+        }
+        else if (item.StartsWith("DrinkingGlass")
+            && WhereIsMyDishes.RandomCheck(WhereIsMyDishes.Glass))
+        {
+            RAPI.GetLocalPlayer().Inventory.AddItem("DrinkingGlass", 1);
+        }
+        else if (item == "Jar_Honey"
+            && WhereIsMyDishes.RandomCheck(WhereIsMyDishes.Jar))
+        {
+            if (WhereIsMyDishes.AltJar)
+            {
+                RAPI.GetLocalPlayer().Inventory.AddItem("DrinkingGlass", 1);
+            }
+            else
+            {
+                RAPI.GetLocalPlayer().Inventory.AddItem("Glass", 1);
+            }
+        }
     }
     #endregion
 
@@ -167,37 +185,34 @@ public class WhereIsMyDishes : Mod
 
 
     #region ConfigFile
-    private static JSONObject configReset()
+    private static void configReset()
     {
-        JSONObject data = JSONObject.Create();
-        data.SetField("Claybowl", 60);
-        data.SetField("Bucket", 80);
-        data.SetField("Jar", 90);
-        data.SetField("Glass", 90);
-        data.SetField("AltJar", true);
-        return data;
+        configData = JSONObject.Create();
+        configData.SetField("Claybowl", 60);
+        configData.SetField("Bucket", 80);
+        configData.SetField("Jar", 90);
+        configData.SetField("Glass", 90);
+        configData.SetField("AltJar", true);
     }
 
-    private static JSONObject configLoad()
+    private static void configLoad()
     {
-        JSONObject data;
         try
         {
-            data = new JSONObject(File.ReadAllText(configPath));
+            configData = new JSONObject(File.ReadAllText(configPath));
         }
         catch
         {
-            data =  configReset();
-            configSave(data);
+            configReset();
+            configSave();
         }
-        return data;
     }
 
-    private static void configSave(JSONObject data)
+    private static void configSave()
     {
         try
         {
-            File.WriteAllText(configPath, data.ToString());
+            File.WriteAllText(configPath, configData.ToString());
         }
         catch (Exception err)
         {
@@ -212,7 +227,6 @@ public class WhereIsMyDishes : Mod
     [ConsoleCommand(name: "wimd", docs: "Syntax: 'wimd <parameter> [value]'  Executes command or sets the value. Use without parameters to get help")]
     public static string MyCommand(string[] args)
     {
-        if (!RAPI.IsCurrentSceneGame()) return "Available only in the world";
         if (args.Length == 2)
         {
             switch (args[0].ToLower())
@@ -229,11 +243,11 @@ public class WhereIsMyDishes : Mod
                 case "drinkingglass":
                 case "glass":
                     Glass = Int32.Parse(args[1]); break;
-                case "altHoneyJar":
-                case "altJar":
+                case "althoneyjar":
+                case "altjar":
                     AltJar = Boolean.Parse(args[1]); break;
             }
-            configSave(configData);
+            configSave();
         }
         if (args.Length == 0 || args[0].ToLower() == "help")
         {
@@ -265,8 +279,8 @@ public class WhereIsMyDishes : Mod
                 case "drinkingglass":
                 case "glass":
                     return "Current value: " + Glass + " %";
-                case "altHoneyJar":
-                case "altJar":
+                case "althoneyjar":
+                case "altjar":
                     return "Current value: " + AltJar.ToString();
                 default:return "Unknown parameter";
             }
@@ -327,19 +341,18 @@ public class WhereIsMyDishes : Mod
             Debug.LogError($"Couldn't parse \"{ExtraSettingsAPI_GetInputValue("Drinking Glass")}\"\n{e}");
         }
         AltJar = ExtraSettingsAPI_GetCheckboxState("Alternative Honey Jar");
-        configSave(configData);
+        configSave();
     }
 
     public void ExtraSettingsAPI_ButtonPress(string name)
     {
         if (name == "Reset config")
         {
-            configData = configReset();
+            configReset();
             ExtraSettingsAPI_SettingsOpen();
         }
     }
 
-    static bool ExtraSettingsAPI_Loaded = false;
     public static bool ExtraSettingsAPI_GetCheckboxState(string SettingName) => false;
     public static string ExtraSettingsAPI_GetInputValue(string SettingName) => "";
     public static void ExtraSettingsAPI_SetCheckboxState(string SettingName, bool value) { }
@@ -351,14 +364,13 @@ public class WhereIsMyDishes : Mod
 
 
 #region Harmony
-
-[HarmonyPatch(typeof(CookingTable)), HarmonyPatch("StartCooking")]
+[HarmonyPatch(typeof(CookingTable)), HarmonyPatch("HandleStartCooking")]
 internal class CookingPatch
 {
-    private static void Prefix(CookingTable __instance, SO_CookingTable_Recipe recipe)
+    private static void Prefix(CookingTable __instance)
     {
-        if (recipe != null&&__instance.CanStartCooking())
-{
+        if (__instance.CanStartCooking() && MyInput.GetButtonDown("Interact"))
+        {
             for (int i = 0; i < __instance.Slots.Length; i++)
             {
                 if (__instance.Slots[i].CurrentItem.UniqueName == "Bucket_Milk"
@@ -367,7 +379,6 @@ internal class CookingPatch
                     RAPI.GetLocalPlayer().Inventory.AddItem("Bucket", 1);
                 }
             }
-
         }
     }
 }
@@ -379,29 +390,7 @@ internal class ConsumePatch
     {
         if (__instance.GetComponent(typeof(Network_Player)) == RAPI.GetLocalPlayer())
         {
-            if ((edibleItem.UniqueName.StartsWith("Claybowl") || edibleItem.UniqueName.StartsWith("Clayplate"))
-                && WhereIsMyDishes.RandomCheck(WhereIsMyDishes.Claybowl))
-            {
-                Debug.Log(true);
-                RAPI.GetLocalPlayer().Inventory.AddItem("Claybowl_Empty",1);
-            }
-            else if (edibleItem.UniqueName.StartsWith("DrinkingGlass")
-                && WhereIsMyDishes.RandomCheck(WhereIsMyDishes.Glass))
-            {
-                RAPI.GetLocalPlayer().Inventory.AddItem("DrinkingGlass", 1);
-            }
-            else if (edibleItem.UniqueName == "Jar_Honey"
-                && WhereIsMyDishes.RandomCheck(WhereIsMyDishes.Jar))
-            {
-                if (WhereIsMyDishes.AltJar)
-                {
-                    RAPI.GetLocalPlayer().Inventory.AddItem("DrinkingGlass", 1);
-                }
-                else
-                {
-                    RAPI.GetLocalPlayer().Inventory.AddItem("Glass", 1);
-                }
-            }
+            ComponentManager<WhereIsMyDishes>.Value.Consume(edibleItem.UniqueName);
         }
     }
 }
@@ -412,14 +401,14 @@ internal class ModifyTankPatch
 {
     private static void Postfix(Tank __instance, Network_Player player, float amount, Item_Base itemType = null)
     {
-        if (player == RAPI.GetLocalPlayer())
+        if (player!=null&&player == RAPI.GetLocalPlayer())
         {
-            if (itemType.UniqueName == "Jar_Honey"
+            if (itemType!=null&& itemType.UniqueName == "Jar_Honey"
                 && WhereIsMyDishes.RandomCheck(WhereIsMyDishes.Jar)) {
                 if (WhereIsMyDishes.AltJar)
-                    RAPI.GetLocalPlayer().Inventory.AddItem("DrinkingGlass", 1);
+                    player.Inventory.AddItem("DrinkingGlass", 1);
                 else
-                    RAPI.GetLocalPlayer().Inventory.AddItem("Glass", 1);
+                    player.Inventory.AddItem("Glass", 1);
             }
         }
     }

@@ -1,76 +1,71 @@
 {
-  "name": "WhereIsMyDishes",
+  "name": "Where Is My Dishes",
   "author": "DeadByte42",
   "description": "Get back your used dishes!",
-  "version": "1.0",
+  "version": "1.0.2",
   "license": "GNU AGPLv3",
   "icon": "icon.png",
   "banner": "banner.png",
-  "gameVersion": "1.0.0",
+  "gameVersion": "1.04",
   "requiredByAllPlayers": false,
-  "updateUrl": "https://www.raftmodding.com/api/v1/mods/YOUR-MOD-SLUG-HERE/version.txt",
+  "updateUrl": "https://www.raftmodding.com/api/v1/mods/where-is-my-dishes/version.txt",
   "isModPermanent": false,
   "excludedFiles": [],
   "modSettings": [
     {
-      "name": "Available only in the world",
-      "type": "text",
-      "access": "menu"
-    },
-    {
       "name": "Reset config",
       "type": "button",
-      "access": "world"
+      "access": "both"
     },
     {
       "name": "",
       "type": "text",
-      "access": "world"
+      "access": "both"
     },
     {
-      "name": "Probabilities (%):",
+      "name": "Probabilities of getting back (%):",
       "type": "text",
-      "access": "world"
+      "access": "both"
     },
     {
       "name": "Claybowl",
       "type": "input",
       "default": "60",
-      "access": "world"
+      "access": "both"
     },
     {
       "name": "Milk Bucket",
       "type": "input",
       "default": "80",
-      "access": "world"
+      "access": "both"
     },
     {
       "name": "Honey Jar",
       "type": "input",
       "default": "90",
-      "access": "world"
+      "access": "both"
     },
     {
       "name": "Drinking Glass",
       "type": "input",
       "default": "90",
-      "access": "world"
+      "access": "both"
     },
     {
-      "name": "",
+      "name": " ",
       "type": "text",
-      "access": "world"
+      "access": "both"
     },
     {
       "name": "Alternative recipes:",
       "type": "text",
-      "access": "world"
+      "access": "both"
     },
     {
       "name": "Alternative Honey Jar",
       "type": "checkbox",
       "default": true,
-      "access": "world"
+      "access": "both"
     }
   ]
 }
